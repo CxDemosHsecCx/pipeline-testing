@@ -77,7 +77,7 @@ jobs:
           ./cx scan create --apikey ${{ secrets.API_KEY }} \
                           --base-uri ${{ secrets.IAM_BASE_URI }} \
                           --project-name VulnerableContainerCLI_Pipeline \
-                          -s built-image \
+                          -s /built-image \
                           --branch development \
                           --scan-types container-security \
                           --container-images "complex-app:latest" \
