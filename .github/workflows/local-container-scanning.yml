@@ -9,9 +9,6 @@ on:
         default: 'scan-with-plugin'
         type: choice
         options:
-          - plan
-          - apply
-          - destroy
           - scan-with-plugin
           - scan-with-cli
       environment:
