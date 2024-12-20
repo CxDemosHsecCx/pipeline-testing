@@ -1,0 +1,86 @@
+#Checkmarx shared action workflow
+
+name: checkmarx-flyway-scan
+
+
+on:
+  workflow_dispatch:
+      inputs:
+        terraform_action:
+          description: 'Terraform Action'     
+          required: true
+          default: 'build-flyway-image'
+          type: choice
+          options:
+            - plan
+            - apply
+            - destroy
+            - build-flyway-image
+        environment:
+          description: 'Environment'
+          required: true
+          default: 'build-flyway-image'
+          type: choice
+          options:
+          - sandbox
+
+  
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+  attestations: read
+  checks: read
+  deployments: read
+  discussions: read
+  issues: read
+  packages: read
+  pages: read
+  pull-requests: read
+  repository-projects: read
+  statuses: read
+  id-token: write
+
+jobs:
+
+  sysdig-image-scan:
+      runs-on: ubuntu-latest
+      if: inputs.terraform_action == 'build-flyway-image'
+      name: checkmarx-image-scan
+      steps:
+      - uses : actions/checkout@v4
+
+      - name: Build image
+        id: docker-build
+        shell: bash
+        run: |
+          docker build -t sysdiglabs/flyway:latest -f Dockerfile ./
+            
+      - name: Checkmarx AST Github Action
+        # You may pin to the exact commit or the version.
+        # uses: Checkmarx/ast-github-action@749fec53e0db0f6404a97e2e0807c3e80e3583a7
+        uses: Checkmarx/ast-github-action@2.0.40
+        with:
+          # Provide the AST portal URL
+          base_uri: ${{ secrets.CX_BASE_URI }}
+          # Provide the Tenant for AST portal URL
+          cx_tenant: ${{ secrets.CX_TENANT }}
+          # Client ID for AST portal authentication
+          cx_client_id: ${{ secrets.CX_CLIENT_ID }}
+          # Secret key for AST portal authentication
+          cx_client_secret: ${{ secrets.CX_CLIENT_SECRET }}
+          # Select a Checkmarx Project Name
+          project_name: ${{ github.repository }}
+          # Branch name
+          branch: ${{ github.head_ref || github.ref }}
+          # GitHub API Token
+          github_token: ${{ github.token }}
+          # Additional parameters for AST scan
+          additional_params: --scan-types container-security --container-images sysdiglabs/flyway:latest -s .
+          # Repository name for PR decoration
+          repo_name: ${{ github.event.repository.name }}
+          # Organization name to create the Pr comment
+          namespace:  ${{ github.repository_owner }}
+          # Pr Number of the pull request that needs the decoration
+          pr_number: ${{ github.event.number }}
+
