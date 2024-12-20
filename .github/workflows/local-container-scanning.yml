@@ -35,6 +35,8 @@ jobs:
         id: docker-build
         run: |
           docker build -t complex-app:latest .
+          mkdir -p built-image
+          docker save complex-app:latest -o built-image/complex-app.tar
 
       - name: Run Checkmarx AST Scan (Plugin)
         uses: Checkmarx/ast-github-action@2.0.40
@@ -46,7 +48,7 @@ jobs:
           project_name: ${{ github.repository }}
           branch: ${{ github.head_ref || github.ref }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          additional_params: --scan-types container-security --container-images complex-app:latest -s .
+          additional_params: --scan-types container-security --container-images complex-app:latest -s built-image
           repo_name: ${{ github.event.repository.name }}
           namespace: ${{ github.repository_owner }}
           pr_number: ${{ github.event.number }}
@@ -75,7 +77,7 @@ jobs:
           ./cx scan create --apikey ${{ secrets.API_KEY }} \
                           --base-uri ${{ secrets.IAM_BASE_URI }} \
                           --project-name VulnerableContainerCLI_Pipeline \
-                          -s . \
+                          -s built-image \
                           --branch development \
                           --scan-types container-security \
                           --container-images "complex-app:latest" \
