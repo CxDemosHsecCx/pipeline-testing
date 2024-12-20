@@ -76,7 +76,7 @@ jobs:
       - name: Run Checkmarx CLI Scan
         run: |
           ./cx scan create --apikey ${{ secrets.API_KEY }} \
-                          --base-uri ${{ secrets.IAM_Base_URI }} \
+                          --base-uri ${{ secrets.IAM_BASE_URI }} \
                           --project-name VulnerableContainerCLI_Pipeline \
                           -s . \
                           --branch development \
