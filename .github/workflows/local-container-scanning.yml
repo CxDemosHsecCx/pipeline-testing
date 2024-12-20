@@ -6,20 +6,21 @@ on:
       terraform_action:
         description: 'Terraform Action'     
         required: true
-        default: 'build-flyway-image'
+        default: 'scan-with-plugin'
         type: choice
         options:
           - plan
           - apply
           - destroy
-          - build-flyway-image
+          - scan-with-plugin
+          - scan-with-cli
       environment:
         description: 'Environment'
         required: true
         default: 'sandbox'
         type: choice
         options:
-        - sandbox
+          - sandbox
 
 permissions:
   contents: read
@@ -27,28 +28,58 @@ permissions:
   id-token: write
 
 jobs:
-  checkmarx-image-scan:
+  checkmarx-plugin-image-scan:
     runs-on: ubuntu-latest
-    if: inputs.terraform_action == 'build-flyway-image'
+    if: ${{ inputs.terraform_action == 'scan-with-plugin' }}
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Build Docker image
-      id: docker-build
-      run: |
-        docker build -t complex-app:latest .
+      - name: Build Docker image
+        id: docker-build
+        run: |
+          docker build -t complex-app:latest .
 
-    - name: Run Checkmarx AST Scan
-      uses: Checkmarx/ast-github-action@2.0.40
-      with:
-        base_uri: ${{ secrets.CX_BASE_URI }}
-        cx_tenant: ${{ secrets.CX_TENANT }}
-        cx_client_id: ${{ secrets.CX_CLIENT_ID }}
-        cx_client_secret: ${{ secrets.CX_CLIENT_SECRET }}
-        project_name: ${{ github.repository }}
-        branch: ${{ github.head_ref || github.ref }}
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        additional_params: --scan-types container-security --container-images complex-app:latest -s .
-        repo_name: ${{ github.event.repository.name }}
-        namespace: ${{ github.repository_owner }}
-        pr_number: ${{ github.event.number }}
+      - name: Run Checkmarx AST Scan (Plugin)
+        uses: Checkmarx/ast-github-action@2.0.40
+        with:
+          base_uri: ${{ secrets.CX_BASE_URI }}
+          cx_tenant: ${{ secrets.CX_TENANT }}
+          cx_client_id: ${{ secrets.CX_CLIENT_ID }}
+          cx_client_secret: ${{ secrets.CX_CLIENT_SECRET }}
+          project_name: ${{ github.repository }}
+          branch: ${{ github.head_ref || github.ref }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          additional_params: --scan-types container-security --container-images complex-app:latest -s .
+          repo_name: ${{ github.event.repository.name }}
+          namespace: ${{ github.repository_owner }}
+          pr_number: ${{ github.event.number }}
+
+  checkmarx-cli-image-scan:
+    runs-on: ubuntu-latest
+    if: ${{ inputs.terraform_action == 'scan-with-cli' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker image
+        id: docker-build
+        run: |
+          docker build -t complex-app:latest .
+
+      - name: Download and Unzip Checkmarx AST CLI
+        run: |
+          curl -L -o ast-cli.tar.gz https://github.com/Checkmarx/ast-cli/releases/download/2.3.8/ast-cli_linux_x64.tar.gz
+          mkdir -p ast-cli
+          tar -xzf ast-cli.tar.gz -C ast-cli
+          mv ast-cli/cx ./cx
+          chmod +x ./cx
+
+      - name: Run Checkmarx CLI Scan
+        run: |
+          ./cx scan create --apikey ${{ secrets.API_KEY }} \
+                          --base-uri ${{ secrets.IAM_Base_URI }} \
+                          --project-name VulnerableContainerCLI_Pipeline \
+                          -s . \
+                          --branch development \
+                          --scan-types container-security \
+                          --container-images "complex-app:latest" \
+                          --project-tags hlcxsese
