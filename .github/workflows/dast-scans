@@ -1,4 +1,4 @@
-name: checkmarx-container-scans
+name: checkmarx-dast-scans
 
 on:
   workflow_dispatch:
