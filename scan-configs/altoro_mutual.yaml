@@ -1,0 +1,90 @@
+---
+env:
+  contexts:
+    - name: "Default Context"
+      urls:
+        - "http://testfire.net/"
+      includePaths:
+        - "http://testfire.net/.*"
+        - "http://testfire.net/*"
+      excludePaths: []
+      authentication:
+        method: "form"
+        parameters:
+          loginPageUrl: "http://testfire.net/login.jsp"
+          loginRequestUrl: "http://testfire.net/doLogin"
+          loginRequestBody: "uid={%username%}&passw={%password%}"
+        verification:
+          method: "response"
+          loggedInRegex: "Sign Off"
+          loggedOutRegex: "Sign In"
+          pollFrequency: 60
+          pollUnits: "requests"
+          pollUrl: ""
+          pollPostData: ""
+      sessionManagement:
+        method: "cookie"
+        parameters: {}
+      technology:
+        exclude: []
+      users:
+        - name: "test_user"
+          credentials:
+            password: "demo1234"
+            username: "jsmith"
+  parameters:
+    failOnError: true
+    failOnWarning: false
+    progressToStdout: true
+  vars: {}
+jobs:
+  - parameters:
+      maxAlertsPerRule: 0
+      scanOnlyInScope: true
+      maxBodySizeInBytesToScan: 0
+      enableTags: false
+    rules: []
+    name: "passiveScan-config"
+    type: "passiveScan-config"
+  - parameters:
+      apiFile: "altoro_mutual.json"
+      apiUrl: ""
+      targetUrl: "http://testfire.net/"
+      context: "Default Context"
+    name: "openapi"
+    type: "openapi"
+  - parameters: {}
+    name: "passiveScan-wait"
+    type: "passiveScan-wait"
+  - parameters:
+      context: "Default Context"
+      user: "test_user"
+      policy: ""
+      maxRuleDurationInMins: 0
+      maxScanDurationInMins: 0
+      addQueryParam: false
+      delayInMs: 0
+      handleAntiCSRFTokens: false
+      injectPluginIdInHeader: false
+      scanHeadersAllRequests: false
+      threadPerHost: 10
+    policyDefinition:
+      defaultStrength: "medium"
+      defaultThreshold: "medium"
+      rules: []
+    name: "activeScan"
+    type: "activeScan"
+  #- parameters:
+  #    template: "risk-confidence-html"
+  #    reportDir: ""
+  #    reportTitle: "ZAP Scanning Report"
+  #    reportDescription: ""
+  #  name: "report"
+  #  type: "report"
+  - parameters:
+      template: "traditional-pdf"
+      reportDir: ""
+      reportTitle: "ZAP Scanning Report"
+      reportDescription: ""
+    name: "report-pdf"
+    type: "report"

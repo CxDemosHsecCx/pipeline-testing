@@ -1,0 +1,104 @@
+name: checkmarx-container-scans
+
+on:
+  workflow_dispatch:
+    inputs:
+      scan_type:
+        description: 'Type of Scan'
+        required: true
+        default: 'webscan'
+        type: choice
+        options:
+          - webscan
+          - api-scan
+          - api-and-web-scan
+      config_file:
+        description: 'Configuration File'
+        required: true
+        default: 'security_tweets.yaml'
+        type: choice
+        options:
+          - security_tweets.yaml
+          - another_config.yaml
+          - custom_config.yaml
+      environment:
+        description: 'Environment'
+        required: true
+        default: 'sandbox'
+        type: choice
+        options:
+          - sandbox
+
+permissions:
+  contents: read
+  security-events: write
+  id-token: write
+
+jobs:
+  checkmarx-DAST-Scan:
+    runs-on: ubuntu-latest
+    if: ${{ inputs.scan_type == 'webscan' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create Output folder
+        run: mkdir ${{ github.workspace }}/output_folder
+      - name: Change dir owner
+        run: sudo chown -R 1000:1000 ${{ github.workspace }}
+      - name: Run Checkmarx DAST Scan (WebScan)
+        uses: checkmarx/dast-action@latest
+        with:
+          config: './scan-configs/security_tweets.yaml'
+          #config: './scan-configs/${{ inputs.config_file }}'
+          command: 'web'
+          verbose: true
+          log_level: info
+          base_url: ${{ secrets.BASE_URL }}
+          environment_id: ${{ secrets.environment_id }}
+          #environment_id: ${{ inputs.environment }}
+          output: ${{ github.workspace }}/output_folder
+          env:
+            CX_APIKEY: ${{ secrets.CX_ONE_API_KEY }}
+      - name: Reclaim output directory
+        if: always()
+        run: sudo chown -R 1001:1001 ${{ github.workspace }}/output_folder
+      - uses: actions/upload-artifact@v3
+        if: always()
+        name: Upload Logs
+        with:
+          name: report
+          path: ${{ github.workspace }}/output_folder       
+
+  
+  checkmarx-API-scan:
+    runs-on: ubuntu-latest
+    if: ${{ inputs.scan_type == 'webscan' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create Output folder
+        run: mkdir ${{ github.workspace }}/output_folder
+      - name: Change dir owner
+        run: sudo chown -R 1000:1000 ${{ github.workspace }}
+      - name: Run Checkmarx DAST Scan (WebScan)
+        uses: checkmarx/dast-action@latest
+        with:
+          config: './scan-configs/altoro_mutual.yaml'
+          openapi: './scan-configs/altoro_mutual.json'
+          #config: './scan-configs/${{ inputs.config_file }}'
+          command: 'api'
+          verbose: true
+          log_level: info
+          base_url: ${{ secrets.BASE_URL }}
+          environment_id: ${{ secrets.environment_id }}
+          #environment_id: ${{ inputs.environment }}
+          output: ${{ github.workspace }}/output_folder
+          env:
+            CX_APIKEY: ${{ secrets.CX_ONE_API_KEY }}
+      - name: Reclaim output directory
+        if: always()
+        run: sudo chown -R 1001:1001 ${{ github.workspace }}/output_folder
+      - uses: actions/upload-artifact@v3
+        if: always()
+        name: Upload Logs
+        with:
+          name: report
+          path: ${{ github.workspace }}/output_folder 
