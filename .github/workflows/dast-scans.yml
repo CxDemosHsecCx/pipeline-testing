@@ -74,8 +74,8 @@ jobs:
           environment_id: ${{ secrets.SECURITY_TWEETS_ENV_ID }}
           #environment_id: ${{ inputs.environment }}
           output: ${{ github.workspace }}/output_folder
-          env:
-            CX_APIKEY: ${{ secrets.API_KEY }}
+        env:
+          CX_APIKEY: ${{ secrets.API_KEY }}
       - uses: actions/upload-artifact@v3
         if: always()
         name: Upload WebScan Logs
@@ -104,8 +104,8 @@ jobs:
           environment_id: ${{ secrets.ALTORO__ENV_ID }}
           #environment_id: ${{ inputs.environment }}
           output: ${{ github.workspace }}/output_folder
-          env:
-            CX_APIKEY: ${{ secrets.API_KEY }}
+        env:
+          CX_APIKEY: ${{ secrets.API_KEY }}
       - uses: actions/upload-artifact@v3
         if: always()
         name: Upload API Scan Logs
