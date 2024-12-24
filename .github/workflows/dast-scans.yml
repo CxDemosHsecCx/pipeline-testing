@@ -63,7 +63,7 @@ jobs:
         run: |
           echo "Output directory: ${{ needs.prepare-environment.outputs.output_dir }}"
       - name: Run Checkmarx DAST Scan (WebScan)
-        uses: checkmarx/dast-action@latest
+        uses: Checkmarx/dast-github-action@v2.3.0
         with:
           config: './scan-configs/security_tweets.yaml'
           #config: './scan-configs/${{ inputs.config_file }}'
@@ -92,7 +92,7 @@ jobs:
         run: |
           echo "Output directory: ${{ needs.prepare-environment.outputs.output_dir }}"
       - name: Run Checkmarx DAST Scan (API Scan)
-        uses: checkmarx/dast-action@latest
+        uses: Checkmarx/dast-github-action@v2.3.0
         with:
           config: './scan-configs/altoro_mutual.yaml'
           openapi: './scan-configs/altoro_mutual.json'
