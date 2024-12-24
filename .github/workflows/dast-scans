@@ -52,12 +52,12 @@ jobs:
           command: 'web'
           verbose: true
           log_level: info
-          base_url: ${{ secrets.BASE_URL }}
-          environment_id: ${{ secrets.environment_id }}
+          base_url: ${{ secrets.CX_BASE_URI }}
+          environment_id: ${{ secrets.SECURITY_TWEETS_ENV_ID }}
           #environment_id: ${{ inputs.environment }}
           output: ${{ github.workspace }}/output_folder
           env:
-            CX_APIKEY: ${{ secrets.CX_ONE_API_KEY }}
+            CX_APIKEY: ${{ secrets.API_KEY }}
       - name: Reclaim output directory
         if: always()
         run: sudo chown -R 1001:1001 ${{ github.workspace }}/output_folder
@@ -87,12 +87,12 @@ jobs:
           command: 'api'
           verbose: true
           log_level: info
-          base_url: ${{ secrets.BASE_URL }}
-          environment_id: ${{ secrets.environment_id }}
+          base_url: ${{ secrets.CX_BASE_URI }}
+          environment_id: ${{ secrets.ALTORO__ENV_ID }}
           #environment_id: ${{ inputs.environment }}
           output: ${{ github.workspace }}/output_folder
           env:
-            CX_APIKEY: ${{ secrets.CX_ONE_API_KEY }}
+            CX_APIKEY: ${{ secrets.API_KEY }}
       - name: Reclaim output directory
         if: always()
         run: sudo chown -R 1001:1001 ${{ github.workspace }}/output_folder
