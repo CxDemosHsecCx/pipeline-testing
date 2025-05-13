@@ -31,10 +31,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build Docker image
+      - name: Log in to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Build and Push Docker image to GHCR
         run: |
-          docker build -t complex-app:latest .
-          mkdir scan_container  # dummy folder to satisfy -s
+          IMAGE=ghcr.io/${{ github.repository_owner }}/complex-app:latest
+          docker build -t $IMAGE .
+          docker push $IMAGE
+          mkdir scan_container  # dummy folder for -s
 
       - name: Run Checkmarx AST Scan (Plugin)
         uses: Checkmarx/ast-github-action@2.0.40
@@ -48,7 +53,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           additional_params: >
             --scan-types container-security
-            --container-images complex-app:latest
+            --container-images ghcr.io/${{ github.repository_owner }}/complex-app:latest
             -s ./scan_container
           repo_name: ${{ github.event.repository.name }}
           namespace: ${{ github.repository_owner }}
@@ -60,12 +65,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build Docker image
-        id: docker-build
+      - name: Log in to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Build and Push Docker image to GHCR
         run: |
-          docker build -t complex-app:latest .
-          mkdir -p built-image
-          docker save complex-app:latest -o built-image/complex-app.tar
+          IMAGE=ghcr.io/${{ github.repository_owner }}/complex-app:latest
+          docker build -t $IMAGE .
+          docker push $IMAGE
+          mkdir -p scan_container  # dummy folder for -s
 
       - name: Download and Unzip Checkmarx AST CLI
         run: |
@@ -78,10 +86,10 @@ jobs:
       - name: Run Checkmarx CLI Scan
         run: |
           ./cx scan create --apikey ${{ secrets.API_KEY }} \
-                          --base-uri ${{ secrets.IAM_BASE_URI }} \
-                          --project-name VulnerableContainerCLI_Pipeline \
-                          -s ./built-image/ \
-                          --branch development \
-                          --scan-types container-security \
-                          --container-images "complex-app:latest" \
-                          --project-tags hlcxsese
+                           --base-uri ${{ secrets.IAM_BASE_URI }} \
+                           --project-name VulnerableContainerCLI_Pipeline \
+                           --branch development \
+                           --scan-types container-security \
+                           --container-images "ghcr.io/${{ github.repository_owner }}/complex-app:latest" \
+                           -s ./scan_container \
+                           --project-tags hlcxsese
