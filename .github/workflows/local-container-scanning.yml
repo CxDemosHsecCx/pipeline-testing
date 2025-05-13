@@ -23,6 +23,7 @@ permissions:
   contents: read
   security-events: write
   id-token: write
+  packages: write
 
 jobs:
   checkmarx-plugin-image-scan:
