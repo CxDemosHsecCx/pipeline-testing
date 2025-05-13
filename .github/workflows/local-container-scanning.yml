@@ -29,6 +29,8 @@ jobs:
   checkmarx-plugin-image-scan:
     runs-on: ubuntu-latest
     if: ${{ inputs.terraform_action == 'scan-with-plugin' }}
+    env:
+      LOWER_OWNER: ${{ github.repository_owner }}
     steps:
       - uses: actions/checkout@v4
 
@@ -36,13 +38,13 @@ jobs:
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
       - name: Build and Push Docker image to GHCR
-        env:
-          OWNER: ${{ github.repository_owner }}
         run: |
-          LOWER_OWNER=$(echo "$OWNER" | tr '[:upper:]' '[:lower:]')
-          IMAGE="ghcr.io/${LOWER_OWNER}/complex-app:latest"
+          OWNER_LC=$(echo "$LOWER_OWNER" | tr '[:upper:]' '[:lower:]')
+          IMAGE="ghcr.io/${OWNER_LC}/complex-app:latest"
+          echo "Using image: $IMAGE"
           docker build -t $IMAGE .
           docker push $IMAGE
+          echo "IMAGE_NAME=$IMAGE" >> $GITHUB_ENV
           mkdir scan_container  # dummy folder for -s
 
       - name: Run Checkmarx AST Scan (Plugin)
@@ -57,7 +59,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           additional_params: >
             --scan-types container-security
-            --container-images ghcr.io/${{ github.repository_owner }}/complex-app:latest
+            --container-images ${{ env.IMAGE_NAME }}
             -s ./scan_container
           repo_name: ${{ github.event.repository.name }}
           namespace: ${{ github.repository_owner }}
@@ -66,6 +68,8 @@ jobs:
   checkmarx-cli-image-scan:
     runs-on: ubuntu-latest
     if: ${{ inputs.terraform_action == 'scan-with-cli' }}
+    env:
+      LOWER_OWNER: ${{ github.repository_owner }}
     steps:
       - uses: actions/checkout@v4
 
@@ -73,13 +77,13 @@ jobs:
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
       - name: Build and Push Docker image to GHCR
-        env:
-          OWNER: ${{ github.repository_owner }}
         run: |
-          LOWER_OWNER=$(echo "$OWNER" | tr '[:upper:]' '[:lower:]')
-          IMAGE="ghcr.io/${LOWER_OWNER}/complex-app:latest"
+          OWNER_LC=$(echo "$LOWER_OWNER" | tr '[:upper:]' '[:lower:]')
+          IMAGE="ghcr.io/${OWNER_LC}/complex-app:latest"
+          echo "Using image: $IMAGE"
           docker build -t $IMAGE .
           docker push $IMAGE
+          echo "IMAGE_NAME=$IMAGE" >> $GITHUB_ENV
           mkdir scan_container  # dummy folder for -s
 
       - name: Download and Unzip Checkmarx AST CLI
@@ -97,6 +101,6 @@ jobs:
                            --project-name VulnerableContainerCLI_Pipeline \
                            --branch development \
                            --scan-types container-security \
-                           --container-images "ghcr.io/${{ github.repository_owner }}/complex-app:latest" \
+                           --container-images "${{ env.IMAGE_NAME }}" \
                            -s ./scan_container \
                            --project-tags hlcxsese
