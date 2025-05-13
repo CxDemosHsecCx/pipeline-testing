@@ -36,7 +36,7 @@ jobs:
 
       - name: Build and Push Docker image to GHCR
         run: |
-          IMAGE=ghcr.io/${{ github.repository_owner }}/complex-app:latest
+          IMAGE=ghcr.io/${{ github.repository_owner,, }}/complex-app:latest
           docker build -t $IMAGE .
           docker push $IMAGE
           mkdir scan_container  # dummy folder for -s
@@ -70,10 +70,10 @@ jobs:
 
       - name: Build and Push Docker image to GHCR
         run: |
-          IMAGE=ghcr.io/${{ github.repository_owner }}/complex-app:latest
+          IMAGE=ghcr.io/${{ github.repository_owner,, }}/complex-app:latest
           docker build -t $IMAGE .
           docker push $IMAGE
-          mkdir -p scan_container  # dummy folder for -s
+          mkdir scan_container  # dummy folder for -s
 
       - name: Download and Unzip Checkmarx AST CLI
         run: |
